@@ -76,3 +76,7 @@ svg {
 .ver-cita i{
   cursor: pointer;
 }
+
+#inputSearch{
+  margin-bottom: 20px;
+}
