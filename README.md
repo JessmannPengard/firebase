@@ -1,4 +1,4 @@
-1.-Ejecutar Webpack
-npm run start
-2.-Levantar servidor web
-firebase serve --only hosting -p 5001
+PLAYING AROUND WITH FIREBASE
+
+1.- Terminal 1: npm run start
+2.- Terminal 2: firebase serve --only hosting -p 5001
