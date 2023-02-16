@@ -1,0 +1,20 @@
+{
+  "name": "firebase1",
+  "version": "1.0.0",
+  "description": "proyecto firebase",
+  "main": "server.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack --watch --progress",
+    "visualize-bundle": "webpack --analyze"  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^9.17.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.48.0",
+    "webpack-bundle-analyzer": "^4.4.2",
+    "webpack-cli": "^4.7.2"
+  }
+}
