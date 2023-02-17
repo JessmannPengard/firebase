@@ -286,7 +286,7 @@ window.onload = () => {
             storageUri: fileSnapshot.metadata.fullPath
           });
         } else {
-          alert("La imagen no puede ser mayor de 3 MB.");
+          alert("La imagen no puede ser mayor de 5 MB.");
         }
       } else {
         alert("Archivo no válido. Seleccione una imagen o un PDF.");
