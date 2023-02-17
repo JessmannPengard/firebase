@@ -280,7 +280,7 @@ window.onload = () => {
           // 3 - Generate a public URL for the file.
           const publicImageUrl = await getDownloadURL(newImageRef);
 
-          // 4 - Update the chat message placeholder with the image's URL.
+          // 4 - Update the document
           await updateDoc(docRef, {
             imageUrl: publicImageUrl,
             storageUri: fileSnapshot.metadata.fullPath
