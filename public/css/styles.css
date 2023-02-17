@@ -75,8 +75,19 @@ svg {
 
 .ver-cita i{
   cursor: pointer;
+  padding-right: 5px;
+}
+
+.ver-cita label {
+  height: 100%;
+  display: flex;
+  margin: auto;
 }
 
 #inputSearch{
   margin-bottom: 20px;
+}
+
+.miniatura{
+  height: 50px;
 }

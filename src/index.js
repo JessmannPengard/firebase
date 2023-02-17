@@ -6,8 +6,14 @@ import {
 } from "firebase/auth";
 import {
   getFirestore, collection, addDoc, serverTimestamp, doc,
-  onSnapshot, getDoc, Firestore, query, orderBy, limit, deleteDoc, updateDoc
+  onSnapshot, getDoc, Firestore, query, orderBy, limit, deleteDoc, updateDoc, where
 } from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
 import { getFirebaseConfig } from "./firebase-config";
 
 // Firebase config
@@ -29,6 +35,7 @@ window.onload = () => {
   let sectionMain = document.getElementById("section_main");
   let btnCrearCita = document.getElementById("btnCrearCita");
   let btnEditarCita = document.getElementById("btnEditarCita");
+
   let btnCancelarEditarCita = document.getElementById("btnCancelarEditarCita");
   let inputNombre = document.getElementById("nombre");
   let inputApellido = document.getElementById("apellido");
@@ -117,6 +124,7 @@ window.onload = () => {
       sectionMain.hidden = false;
       let username = user.displayName != null ? user.displayName : user.email;
       document.getElementById("username").innerText = username;
+      cargarCitas();
     } else {
       // Not logged
       sectionLogin.hidden = false;
@@ -152,7 +160,7 @@ window.onload = () => {
 
   // Get and show dates
   function cargarCitas() {
-    const citasQuery = query(collection(getFirestore(), 'citas'), orderBy('fecha', 'desc'), limit(12));
+    const citasQuery = query(collection(getFirestore(), 'citas'), where("user", "==", getAuth().currentUser.email), orderBy('fecha', 'desc'), limit(12));
 
     // Start listening to the query
     onSnapshot(citasQuery, function (snapshot) {
@@ -161,14 +169,25 @@ window.onload = () => {
         let cita = doc.data();
         // Check for search input and filter if needed
         let texto = inputSearch.value;
-        if (cita.nombre.indexOf(texto) >= 0 || cita.apellido.indexOf(texto) >= 0) {
+        if (cita.nombre.toLowerCase().indexOf(texto.toLowerCase()) >= 0 || cita.apellido.toLowerCase().indexOf(texto.toLowerCase()) >= 0) {
           citas += `<p class='ver-cita' id='${doc.id}'>
                     <i class="fa-regular fa-calendar"></i>
                     <span class='ver-cita-fechaHora'>${cita.fecha} ${cita.hora}</span>
                     <span class='ver-cita-nombre'>${cita.nombre} ${cita.apellido}</span>
                     <i class="fa-solid fa-trash borrar-cita"></i>
                     <i class="fa-solid fa-pen editar-cita"></i>
-                  </p>`;
+                    <label>
+                      <input class="inputFile d-none" type="file">
+                      <i class="fa-solid fa-camera subir-imagen" (click)=""></i>
+                    </label>`;
+          if (cita.imageUrl != null) {
+            if (cita.imageUrl.indexOf(".pdf") != -1) {
+              citas += `<p><a href="${cita.imageUrl}" target="blank"><i class="fa-solid fa-file-pdf fa-3x"></i></a></p>`;
+            } else {
+              citas += `<p><a href="${cita.imageUrl}" target="blank"><img src="${cita.imageUrl}" class="miniatura"></img></a></p>`;
+            }
+          }
+          citas += `</p>`;
         }
       });
       document.getElementById("citas").innerHTML = citas;
@@ -205,6 +224,15 @@ window.onload = () => {
         }, false);
       }
 
+      // Add picture upload button to each document
+      let btnsImagen = document.getElementsByClassName("inputFile");
+      for (let i = 0; i < btnsImagen.length; i++) {
+        const btnI = btnsImagen[i];
+        // Upload image logic
+        btnI.addEventListener("change", function (event) {
+          subirImagen(btnI.parentElement.parentElement.id, event.target.files[0]);
+        }, false);
+      }
     });
   }
 
@@ -235,8 +263,38 @@ window.onload = () => {
       })
   }
 
-  // Initial call to Get and Show dates
-  cargarCitas();
+  // Upload image
+  async function subirImagen(id, file) {
+    try {
+      if (file.type.match("image.*") || file.type.match("application/pdf")) {
+        if (file.size < 5 * 1024 * 1024) {
+
+          // 1 - Reference to document
+          const docRef = doc(getFirestore(), "citas", id);
+
+          // 2 - Upload the image to Cloud Storage.
+          const filePath = `${getAuth().currentUser.uid}/${docRef.id}/${file.name}`;
+          const newImageRef = ref(getStorage(), filePath);
+          const fileSnapshot = await uploadBytesResumable(newImageRef, file);
+
+          // 3 - Generate a public URL for the file.
+          const publicImageUrl = await getDownloadURL(newImageRef);
+
+          // 4 - Update the chat message placeholder with the image's URL.
+          await updateDoc(docRef, {
+            imageUrl: publicImageUrl,
+            storageUri: fileSnapshot.metadata.fullPath
+          });
+        } else {
+          alert("La imagen no puede ser mayor de 3 MB.");
+        }
+      } else {
+        alert("Archivo no válido. Seleccione una imagen o un PDF.");
+      }
+    } catch (error) {
+      console.error('Ha habido un error subiendo el archivo a Cloud Storage:', error);
+    }
+  }
 
 }
 
